@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  fastapi_app:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    image: ffserrano42/fastapi:2203204
+    ports:
+      - "5001:5001"
+
+  streamlit:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    image: ffserrano42/t1_streamlit:02192024
+    ports:
+      - "8501:8501"
+    depends_on:
+      - fastapi_app
+          
+  consumer:
+    build:
+      context: ./rabbit
+      dockerfile: Dockerfile
+    image: ffserrano42/consumer:24032024        
