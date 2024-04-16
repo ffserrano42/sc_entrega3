@@ -18,6 +18,7 @@ import time
 from auth import AuthHandler
 from google.cloud import storage
 from google.oauth2 import service_account
+from google.cloud import pubsub_v1
 
 #Coneccion para probar con el docker compose
 DATABASE_URL = os.environ.get("DATABASE_URL","postgresql://api:Uniandes2025!@34.176.118.146:5433/converter")
@@ -209,6 +210,24 @@ def upload_file_to_gcs(bucket_name, file_name, file_content):
     blob = bucket.blob(file_name)
     blob.upload_from_string(file_content)
 
+def put_quemessage_gcp(docid):
+    try:
+        # Configurar el cliente de Pub/Sub
+        credentials = get_google_credentials("C:/Users/felipe.serrano/personal/sc_entrega3/sc_entrega3/varios/myfirstproject-417702-6a6d72abcd7b.json")
+        publisher = pubsub_v1.PublisherClient(credentials=credentials)
+        #topic_path = publisher.topic_path(project_id, topic_name)
+        topic_path = publisher.topic_path(os.environ.get("PROJECT_ID","myfirstproject-417702"), os.environ.get("PROJECT_TOPIC","pdfs"))
+        # Crear el mensaje a enviar
+        data = {
+            'id_book': docid
+        }
+        message_data = json.dumps(data).encode("utf-8")
+        # Enviar el mensaje al tópico
+        future = publisher.publish(topic_path, message_data)
+        message_id = future.result()
+        print(f"Mensaje escrito correctamente. ID de mensaje: {message_id}")
+    except Exception as e:
+        print(f"Error en la conexión con el servidor de mensajes: {e}")
 
 # Operaciones de cargar un documento categoria
 @app.post("/uploadDoc", response_model=dict,tags=["documento"])
@@ -236,7 +255,8 @@ async def crear_documento(doc: Documento , db: Session = Depends(get_db),usermai
         db.add(document_db)
         db.commit()
         db.refresh(document_db)
-        put_quemessage(document_db.id_document)
+        #put_quemessage(document_db.id_document)
+        put_quemessage_gcp(document_db.id_document)
         return {"id":document_db.id_document}
     except SQLAlchemyError as e:
         raise HTTPException(status_code=404, detail=f"Error en la base de datos: {str(e)}")
