@@ -1,12 +1,9 @@
 Decargar las siguientes imagenes
-docker pull rabbitmq --> el rabbit
 docker pull ffserrano42/fastapi:2203204 --> imagen de fastapi
 docker pull ffserrano42/t1_streamlit:02192024--> Imagen del streamlit
 docker pull ffserrano42/consumer:24032024--> Consumidor de la cola
 En este caso NO es necesario descargar la imagen de la base de datos, porque se utiliza el servicio de SQL de GCP
 En este caso NO es neceario instalar redes, ya que cada contenedor, estara en una MV diferente, y se conocen solo por la IP privada
-
-
 
 Comandos de docker utiles
 docker inspect network [Nombre red]-->obtiene los contenedores conectados a esa red, y asi obtener las ips
@@ -71,6 +68,10 @@ Comando para ejecutar el proyecto de API
 1. Abrir consola
 2. ubicarse en la carpeta API
 3. uvicorn app:app --port 5001 --reload
+
+Paquetes adicionales a instalar
+pip install google-cloud-pubsub-->para el pubsub
+pip install google-cloud-storage--> para el bucket
 
 Compando para ejecutar el proyecto de WEB
 1. Abrir consola
