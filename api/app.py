@@ -16,9 +16,12 @@ from jose import JWTError, jwt
 from datetime import date, datetime, timedelta
 import time
 from auth import AuthHandler
+from google.cloud import storage
+from google.oauth2 import service_account
+from google.cloud import pubsub_v1
 
 #Coneccion para probar con el docker compose
-DATABASE_URL = os.environ.get("DATABASE_URL","postgresql://api:Uniandes2025!@34.176.133.163:5432/converter")
+DATABASE_URL = os.environ.get("DATABASE_URL","postgresql://api:Uniandes2025!@34.176.118.146:5433/converter")
   
 #Coneccion para probar con el posgress del computador
 #DATABASE_URL = "postgresql://postgres:Esposa2021!@localhost:5432/SC_P0"
@@ -194,6 +197,38 @@ def iniciar_sesion(usuario_credenciales: Usuario, db: Session = Depends(get_db))
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+# Función para obtener las credenciales de Google Cloud Storage
+def get_google_credentials(credentials_file_path):
+    credentials = service_account.Credentials.from_service_account_file(credentials_file_path)
+    return credentials
+
+# Función para subir un archivo a Google Cloud Storage
+def upload_file_to_gcs(bucket_name, file_name, file_content):
+    credentials = get_google_credentials("C:/Users/felipe.serrano/personal/sc_entrega3/sc_entrega3/varios/myfirstproject-417702-6a6d72abcd7b.json")
+    client = storage.Client(credentials=credentials)
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(file_name)
+    blob.upload_from_string(file_content)
+
+def put_quemessage_gcp(docid):
+    try:
+        # Configurar el cliente de Pub/Sub
+        credentials = get_google_credentials("C:/Users/felipe.serrano/personal/sc_entrega3/sc_entrega3/varios/myfirstproject-417702-6a6d72abcd7b.json")
+        publisher = pubsub_v1.PublisherClient(credentials=credentials)
+        #topic_path = publisher.topic_path(project_id, topic_name)
+        topic_path = publisher.topic_path(os.environ.get("PROJECT_ID","myfirstproject-417702"), os.environ.get("PROJECT_TOPIC","pdfs"))
+        # Crear el mensaje a enviar
+        data = {
+            'id_book': docid
+        }
+        message_data = json.dumps(data).encode("utf-8")
+        # Enviar el mensaje al tópico
+        future = publisher.publish(topic_path, message_data)
+        message_id = future.result()
+        print(f"Mensaje escrito correctamente. ID de mensaje: {message_id}")
+    except Exception as e:
+        print(f"Error en la conexión con el servidor de mensajes: {e}")
+
 # Operaciones de cargar un documento categoria
 @app.post("/uploadDoc", response_model=dict,tags=["documento"])
 async def crear_documento(doc: Documento , db: Session = Depends(get_db),usermail=Depends(auth_handler.auth_wrapper)):
@@ -201,19 +236,27 @@ async def crear_documento(doc: Documento , db: Session = Depends(get_db),usermai
         document_data= doc.dict()
         # Decodifica el contenido del archivo de base64 a bytes
         source_file_content = base64.b64decode(document_data["source_file"])
+        source_file_name=document_data["source_filename"]
         # Guarda el archivo en disco
-        upload_folder = os.environ.get("TOCONVERT","C:/to_convert")
-        os.makedirs(upload_folder, exist_ok=True)
-        file_path = os.path.join(upload_folder, document_data["source_filename"])
-        with open(file_path, "wb") as file_object:
-            file_object.write(source_file_content)
+        #upload_folder = os.environ.get("TOCONVERT","C:/to_convert")
+        #os.makedirs(upload_folder, exist_ok=True)
+        #file_path = os.path.join(upload_folder, document_data["source_filename"])
+        #with open(file_path, "wb") as file_object:
+            #file_object.write(source_file_content)
         # Actualiza el campo source_file con la ruta en disco
-        document_data["source_file"] = file_path       
+        # Guarda el archivo en un bucket de Google Cloud Storage
+        bucket_name = os.environ.get("GOOGLE_CLOUD_STORAGE_BUCKET_NAME", "sc_entrega3_files")
+        upload_file_to_gcs(bucket_name, source_file_name, source_file_content)
+        # Actualiza el campo source_file con la URL del archivo en GCS
+        file_url = f"https://storage.cloud.google.com/{bucket_name}/{source_file_name}"
+        document_data["source_file"] = file_url   
+        #document_data["source_file"] = file_path       
         document_db=DocumentModel(**document_data,status ="Pendiente",upload_datetime=datetime.now())    
         db.add(document_db)
         db.commit()
         db.refresh(document_db)
-        put_quemessage(document_db.id_document)
+        #put_quemessage(document_db.id_document)
+        put_quemessage_gcp(document_db.id_document)
         return {"id":document_db.id_document}
     except SQLAlchemyError as e:
         raise HTTPException(status_code=404, detail=f"Error en la base de datos: {str(e)}")
