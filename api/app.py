@@ -237,50 +237,21 @@ async def crear_documento(doc: Documento , db: Session = Depends(get_db),usermai
         document_data= doc.dict()
         # Decodifica el contenido del archivo de base64 a bytes
         source_file_content = base64.b64decode(document_data["source_file"])
-        source_file_name=document_data["source_filename"]
-        # Guarda el archivo en disco
-        #upload_folder = os.environ.get("TOCONVERT","C:/to_convert")
-        #os.makedirs(upload_folder, exist_ok=True)
-        #file_path = os.path.join(upload_folder, document_data["source_filename"])
-        #with open(file_path, "wb") as file_object:
-            #file_object.write(source_file_content)
-        # Actualiza el campo source_file con la ruta en disco
+        source_file_name=document_data["source_filename"]       
         # Guarda el archivo en un bucket de Google Cloud Storage
         bucket_name = os.environ.get("BUCKET_NAME", "sc_entrega3_files")
         upload_file_to_gcs(bucket_name, source_file_name, source_file_content)
         # Actualiza el campo source_file con la URL del archivo en GCS
         file_url = f"https://storage.cloud.google.com/{bucket_name}/{source_file_name}"
-        document_data["source_file"] = file_url   
-        #document_data["source_file"] = file_path       
+        document_data["source_file"] = file_url              
         document_db=DocumentModel(**document_data,status ="Pendiente",upload_datetime=datetime.now())    
         db.add(document_db)
         db.commit()
-        db.refresh(document_db)
-        #put_quemessage(document_db.id_document)
+        db.refresh(document_db)        
         put_quemessage_gcp(document_db.id_document)
         return {"id":document_db.id_document}
     except SQLAlchemyError as e:
         raise HTTPException(status_code=404, detail=f"Error en la base de datos: {str(e)}")
-    
-#Funcion que coloca en la cola de mensajes el id del documento a procesar.
-def put_quemessage(docid):
-    try:
-        RABBIT = os.environ.get("RABBIT","localhost")
-        connection = pika.BlockingConnection(pika.ConnectionParameters(RABBIT))
-        channel = connection.channel()
-        channel.queue_declare(queue='pdfs')
-        data = {
-        'id_book': docid    
-        }
-        # Convert the JSON object to a string
-        body = json.dumps(data)
-        channel.basic_publish(exchange='',
-                            routing_key='pdfs',
-                            body=body)
-        print(" Mensaje escrito correctamente")
-        connection.close()
-    except Exception as e:
-        print(f"Error en la conexion con el servidor de mensajes: {e}")
 
 #Operacion para eliminar un categoria. Este metodo fallara si la categoria tiene una tarea asignada
 @app.delete("/removeDoc/{id}", response_model=dict,tags=["delete_documento"])
@@ -315,7 +286,6 @@ async def obtener_documentos(user_id:int, db: Session = Depends(get_db),username
         print("El usuario no tiene nigun documento")
         tareas_dict_list=[]
         return tareas_dict_list
-
 
 # Función para descargar un archivo de Google Cloud Storage
 def download_file_from_gcs(bucket_name, file_name):
