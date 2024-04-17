@@ -20,6 +20,8 @@ from google.cloud import storage
 from google.oauth2 import service_account
 from google.cloud import pubsub_v1
 
+
+
 #Coneccion para probar con el docker compose
 DATABASE_URL = os.environ.get("DATABASE_URL","postgresql://api:Uniandes2025!@34.176.118.146:5433/converter")
   
@@ -204,7 +206,7 @@ def get_google_credentials(credentials_file_path):
 
 # Función para subir un archivo a Google Cloud Storage
 def upload_file_to_gcs(bucket_name, file_name, file_content):
-    credentials = get_google_credentials("C:/Users/zedan/OneDrive - Universidad de los Andes/Tercero/SolucionesCloud/sc_entrega3/sc_entrega3/varios/myfirstproject-417702-6a6d72abcd7b.json")
+    credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
     client = storage.Client(credentials=credentials)
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(file_name)
@@ -214,7 +216,7 @@ def upload_file_to_gcs(bucket_name, file_name, file_content):
 def put_quemessage_gcp(docid):
     try:
         # Configurar el cliente de Pub/Sub
-        credentials = get_google_credentials("C:/Users/zedan/OneDrive - Universidad de los Andes/Tercero/SolucionesCloud/sc_entrega3/sc_entrega3/varios/myfirstproject-417702-6a6d72abcd7b.json")
+        credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
         publisher = pubsub_v1.PublisherClient(credentials=credentials)
         #topic_path = publisher.topic_path(project_id, topic_name)
         topic_path = publisher.topic_path(os.environ.get("PROJECT_ID","myfirstproject-417702"), os.environ.get("PROJECT_TOPIC","pdfs"))
@@ -289,7 +291,7 @@ async def obtener_documentos(user_id:int, db: Session = Depends(get_db),username
 
 # Función para descargar un archivo de Google Cloud Storage
 def download_file_from_gcs(bucket_name, file_name):
-    credentials = get_google_credentials("C:/Users/zedan/OneDrive - Universidad de los Andes/Tercero/SolucionesCloud/sc_entrega3/sc_entrega3/varios/myfirstproject-417702-6a6d72abcd7b.json")
+    credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
     client = storage.Client(credentials=credentials)
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(file_name)
@@ -322,7 +324,7 @@ async def obtener_pdf_doc(doc_id: int, db:Session=Depends(get_db),username=Depen
     nombre_archivo = os.path.basename(file_path)
     print(nombre_archivo)    
     bucket_name = os.environ.get("BUCKET_NAME", "sc_entrega3_files")
-    file_content = download_file_from_gcs(bucket_name, nombre_archivo)# Aca toca incluir un codigo para obtener el nombre del archivo y el nombre del bucket    
+    file_content = download_file_from_gcs(bucket_name, nombre_archivo)    
     # Convertir el contenido del archivo a base64
     pdf_base64 = base64.b64encode(file_content).decode('utf-8')
     ###pdf_base64 = base64.b64encode(documento_usuario.pdf_file).decode('utf-8')

@@ -1,5 +1,5 @@
 Decargar las siguientes imagenes
-docker pull ffserrano42/fastapi:2203204 --> imagen de fastapi
+docker pull ffserrano42/api:04172024 --> imagen de fastapi
 docker pull ffserrano42/t1_streamlit:02192024--> Imagen del streamlit
 docker pull ffserrano42/consumer:24032024--> Consumidor de la cola
 En este caso NO es necesario descargar la imagen de la base de datos, porque se utiliza el servicio de SQL de GCP
@@ -19,7 +19,6 @@ Comandos linux
 1. sudo -->para ejecutar todo con permisos de admin
 2. ls -->listar el contenido de un directorio
 3. pwd --> obtener la ruta actual donde esta ubicado el usuario.
-4. Para crear el servidor NFS y que salga mas "economico", seguir las instrucciones del video https://jpadillaa.hashnode.dev/tutorial-nfs-network-file-system
 5. Para instalar libreoffice--> sudo apt install libreoffice
 6. para conertir un archivo a PDF utilizando libreoffice--> sudo soffice --headless --convert-to pdf --outdir remote_folder/ remote_folder/nombre_archivo.pptx
 
@@ -36,8 +35,7 @@ ips privadas de GCP fs:
 4. DB_dev: 10.66.192.9
 
 Pasos para levantar la app por primera vez
-1. docker run --name rabbitmq -p 5672:5672 -p 15672:15672 [id_imagen]
-2. docker run --name fast_api  -p 5001:5001 -e RABBIT=10.194.0.5 -e DATABASE_URL='postgresql://api:Uniandes2025!@10.66.192.9:5432/converter' -e TOCONVERT=/remote_folder  -v /home/zedano/remote_folder:/remote_folder [id_imagen]
+2. docker run --name fast_api  -p 5001:5001 -e DATABASE_URL='postgresql://api:Uniandes2025!@10.66.192.9:5432/converter' -e PROJECT_ID=myfirstproject-417702 -e PROJECT_TOPIC=pdfs -e BUCKET_NAME=sc_entrega3_files [id_imagen]
     En las variables de DATABASE_URL debe ir el valor entre ' ya que se tiene el caracter de !
 5. docker run --name streamlit -p 8501:8501 -e API_URL=http://10.194.0.2:5001 [id_imagen]
 6. docker run --name consumer --privileged -e RABBITMQ_URL=10.194.0.5 -e DATABASE='postgresql://api:Uniandes2025!@10.66.192.9:5432/converter' -e TOCONVERT=remote_folder/ -v /home/zedano/remote_folder:/remote_folder [id_imagen]
