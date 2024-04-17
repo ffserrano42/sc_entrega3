@@ -204,16 +204,17 @@ def get_google_credentials(credentials_file_path):
 
 # Función para subir un archivo a Google Cloud Storage
 def upload_file_to_gcs(bucket_name, file_name, file_content):
-    credentials = get_google_credentials("C:/Users/felipe.serrano/personal/sc_entrega3/sc_entrega3/varios/myfirstproject-417702-6a6d72abcd7b.json")
+    credentials = get_google_credentials("C:/Users/zedan/OneDrive - Universidad de los Andes/Tercero/SolucionesCloud/sc_entrega3/sc_entrega3/varios/myfirstproject-417702-6a6d72abcd7b.json")
     client = storage.Client(credentials=credentials)
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(file_name)
     blob.upload_from_string(file_content)
 
+# Función para enviar un mensaje a Pub/Sub
 def put_quemessage_gcp(docid):
     try:
         # Configurar el cliente de Pub/Sub
-        credentials = get_google_credentials("C:/Users/felipe.serrano/personal/sc_entrega3/sc_entrega3/varios/myfirstproject-417702-6a6d72abcd7b.json")
+        credentials = get_google_credentials("C:/Users/zedan/OneDrive - Universidad de los Andes/Tercero/SolucionesCloud/sc_entrega3/sc_entrega3/varios/myfirstproject-417702-6a6d72abcd7b.json")
         publisher = pubsub_v1.PublisherClient(credentials=credentials)
         #topic_path = publisher.topic_path(project_id, topic_name)
         topic_path = publisher.topic_path(os.environ.get("PROJECT_ID","myfirstproject-417702"), os.environ.get("PROJECT_TOPIC","pdfs"))
@@ -229,7 +230,7 @@ def put_quemessage_gcp(docid):
     except Exception as e:
         print(f"Error en la conexión con el servidor de mensajes: {e}")
 
-# Operaciones de cargar un documento categoria
+# Operaciones de cargar un documento al bucket de Google Cloud Storage
 @app.post("/uploadDoc", response_model=dict,tags=["documento"])
 async def crear_documento(doc: Documento , db: Session = Depends(get_db),usermail=Depends(auth_handler.auth_wrapper)):
     try:
@@ -245,7 +246,7 @@ async def crear_documento(doc: Documento , db: Session = Depends(get_db),usermai
             #file_object.write(source_file_content)
         # Actualiza el campo source_file con la ruta en disco
         # Guarda el archivo en un bucket de Google Cloud Storage
-        bucket_name = os.environ.get("GOOGLE_CLOUD_STORAGE_BUCKET_NAME", "sc_entrega3_files")
+        bucket_name = os.environ.get("BUCKET_NAME", "sc_entrega3_files")
         upload_file_to_gcs(bucket_name, source_file_name, source_file_content)
         # Actualiza el campo source_file con la URL del archivo en GCS
         file_url = f"https://storage.cloud.google.com/{bucket_name}/{source_file_name}"
@@ -316,18 +317,22 @@ async def obtener_documentos(user_id:int, db: Session = Depends(get_db),username
         return tareas_dict_list
 
 
+# Función para descargar un archivo de Google Cloud Storage
+def download_file_from_gcs(bucket_name, file_name):
+    credentials = get_google_credentials("C:/Users/zedan/OneDrive - Universidad de los Andes/Tercero/SolucionesCloud/sc_entrega3/sc_entrega3/varios/myfirstproject-417702-6a6d72abcd7b.json")
+    client = storage.Client(credentials=credentials)
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(file_name)
+    return blob.download_as_bytes()
+
 #Operacion que permite obtener el documento original del usuario.
 @app.get("/originalDoc/{doc_id}",response_model=dict,tags=["original_documento"])
 async def obtener_original_doc(doc_id: int, db:Session=Depends(get_db),username=Depends(auth_handler.auth_wrapper)):
     documento_usuario = db.query(DocumentModel).filter(DocumentModel.id_document == doc_id).first()    
     if documento_usuario is None:               
         raise HTTPException(status_code=404, detail=f"Documento con ID {id} no encontrado o tiene el estado Pendiente")
-    # Obtener la ruta del archivo
-    file_path = documento_usuario.source_file    
-    # Leer el archivo
-    with open(file_path, "rb") as file:
-        file_content = file.read()
-    # Convertir el contenido del archivo a base64
+    bucket_name = os.environ.get("BUCKET_NAME", "sc_entrega3_files")
+    file_content = download_file_from_gcs(bucket_name, documento_usuario.source_filename)
     file_base64 = base64.b64encode(file_content).decode('utf-8')        
     documento_dict = {
         'id_document': documento_usuario.id_document,
@@ -343,10 +348,11 @@ async def obtener_pdf_doc(doc_id: int, db:Session=Depends(get_db),username=Depen
     if documento_usuario is None:               
         raise HTTPException(status_code=404, detail=f"Revisa que el documento con ID {doc_id} este en estado Disponible")   
     # Obtener la ruta del archivo
-    file_path = documento_usuario.pdf_file    
-    # Leer el archivo
-    with open(file_path, "rb") as file:
-        file_content = file.read()
+    file_path = documento_usuario.pdf_file
+    nombre_archivo = os.path.basename(file_path)
+    print(nombre_archivo)    
+    bucket_name = os.environ.get("BUCKET_NAME", "sc_entrega3_files")
+    file_content = download_file_from_gcs(bucket_name, nombre_archivo)# Aca toca incluir un codigo para obtener el nombre del archivo y el nombre del bucket    
     # Convertir el contenido del archivo a base64
     pdf_base64 = base64.b64encode(file_content).decode('utf-8')
     ###pdf_base64 = base64.b64encode(documento_usuario.pdf_file).decode('utf-8')
