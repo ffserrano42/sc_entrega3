@@ -35,9 +35,9 @@ ips privadas de GCP fs:
 4. DB_dev: 10.66.192.9
 
 Pasos para levantar la app por primera vez
-2. docker run --name fast_api  -p 5001:5001 -e DATABASE_URL='postgresql://api:Uniandes2025!@34.176.118.146:5433/converter' -e PROJECT_ID=myfirstproject-417702 -e PROJECT_TOPIC=pdfs -e BUCKET_NAME=sc_entrega3_files [id_imagen]
+2. docker run --name fast_api  -p 5001:5001 -d --restart unless-stopped -e DATABASE_URL='postgresql://api:Uniandes2025!@10.194.0.14:5433/converter' -e PROJECT_ID=myfirstproject-417702 -e PROJECT_TOPIC=pdfs -e BUCKET_NAME=sc_entrega3_files [id_imagen]
     En las variables de DATABASE_URL debe ir el valor entre ' ya que se tiene el caracter de !
-5. docker run --name streamlit -p 8501:8501 -e API_URL=http://10.194.0.2:5001 [id_imagen]
+5. docker run --name streamlit -p 8501:8501 -d --restart unless-stopped  -e API_URL=http://10.194.0.2:5001 [id_imagen]
 6. docker run --name consumer --privileged -e RABBITMQ_URL=10.194.0.5 -e DATABASE='postgresql://api:Uniandes2025!@10.66.192.9:5432/converter' -e TOCONVERT=remote_folder/ -v /home/zedano/remote_folder:/remote_folder [id_imagen]
         En las variables de DATABASE_URL debe ir el valor entre '' ya que se tiene el caracter de !
 
