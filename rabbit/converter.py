@@ -9,9 +9,13 @@ import requests
 from sqlalchemy import Date, DateTime, ForeignKey, LargeBinary, Text, create_engine, Column, Integer, String, select, delete
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker,Session,relationship
+from google.cloud import pubsub_v1
+from google.cloud import storage
+from google.oauth2 import service_account
+from google.cloud import pubsub_v1
 
 RABBITMQ_URL =os.environ.get('RABBITMQ_URL', '34.176.60.161')# colocar la ip privada de la maquina donde esta el rabbit
-DATABASE_URL = os.environ.get('DATABASE', "postgresql://api:Uniandes2025!@34.176.133.163:5432/converter")# colocar la ip privada del servidor de postgress
+DATABASE_URL = os.environ.get('DATABASE', "postgresql://api:Uniandes2025!@34.176.118.146:5433/converter")# colocar la ip privada del servidor de postgress
 engine = create_engine(DATABASE_URL)
 Base = declarative_base()
 Base.metadata.create_all(bind=engine)
@@ -28,36 +32,39 @@ class DocumentModel(Base):
     status=Column(String,nullable=False)
     upload_datetime=Column(DateTime, nullable=False)
     converted_datetime=Column(DateTime, nullable=True)
+def get_google_credentials(credentials_file_path):
+    credentials = service_account.Credentials.from_service_account_file(credentials_file_path)
+    return credentials
+def callback2(message):
+        data = json.loads(message.data.decode("utf-8"))
+        name = data.get("id_book")
+        print(f"{name} ha sido recibido")
+        obtain_pdf(name)
+        message.ack()
 
-def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(RABBITMQ_URL,5672))
-    channel = connection.channel()
-    def get_db():
-        db = SessionLocal()
-        try:
-            return db
-        finally:
-            db.close()
-
-   
-    def obtain_pdf(id_document):
+def obtain_pdf(id_document):
         db=get_db()
         try:
             print(f" deberia ir a procesar el documento con id : {id_document}")
             book = db.query(DocumentModel).filter(DocumentModel.id_document == id_document).first()
             if book:                           
                 try:
+                    credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
+                    client = storage.Client(credentials=credentials)
+                    bucket_name = os.environ.get("BUCKET_NAME", "sc_entrega3_files")
+                    bucket = client.bucket(bucket_name)
+                    blob = bucket.blob(book.source_filename)
+                    if not os.path.exists("./todelete"):
+                        os.makedirs("./todelete")
+                    blob.download_to_filename("./todelete")                    
                     upload_folder = os.environ.get("TOCONVERT","remote_folder/")
-                    name_output = re.sub(r'\.(xlsx|pptx|docx|odt)$', '.pdf', book.source_filename)
-                    #Opcion que funciona si no se ejecuta desde un contenedor
-                        #source_file_without_first_slash = book.source_file.replace('/', '', 1)# se elimina el primer slash de la base de datos, ya que el comando no sirve sin este                    
-                    #Opcion que funciona si no se ejecuta desde un contenedor
-                        #subprocess.call(['sudo','soffice', '--headless', '--convert-to', 'pdf', '--outdir', upload_folder, source_file_without_first_slash])                                        
-                    #Opcion que funciona si se ejecuta desde un contenedor
+                    name_output = re.sub(r'\.(xlsx|pptx|docx|odt)$', '.pdf', book.source_filename)                    
                     source_file_without_first_slash=book.source_file
                     print(f"soffice --headless --convert-to pdf --outdir {upload_folder} {source_file_without_first_slash}")
-                    subprocess.call(['soffice', '--headless', '--convert-to', 'pdf', '--outdir', upload_folder, source_file_without_first_slash])
+                    #subprocess.call(['soffice', '--headless', '--convert-to', 'pdf', '--outdir', upload_folder, source_file_without_first_slash])
                     print(f"El archivo {book.source_file} ha sido convertido a PDF correctamente.")
+                    pdf_blob = bucket.blob(f"{upload_folder}/{name_output}")
+                    pdf_blob.upload_from_filename(f"{upload_folder}/{name_output}")
                     book.converted_datetime = datetime.datetime.now()
                     book.status = "Disponible"
                     book.pdf_file = f"/{upload_folder}{name_output}"# se debe colocar el '/' al inicio para que el api pueda leerlo
@@ -74,20 +81,42 @@ def main():
             else:
                 print("No se encontró el libro en la base de datos.")
         finally:
-         db.close()  
-   
-    def callback(ch, method, properties, body):
+         db.close()
+
+def get_db():
+        db = SessionLocal()
+        try:
+            return db
+        finally:
+            db.close()
+def callback(ch, method, properties, body):
         data = json.loads(body)
         name = data.get("id_book")      
         obtain_pdf(name)
-    try:
-        channel.basic_consume(queue='pdfs',
-                            auto_ack=True,
-                            on_message_callback=callback)
-        print(' [*] Esperando mensajes, oprime CTRL+C para salir')
-        channel.start_consuming()
-    except pika.exceptions.ChannelClosedByBroker:
-        print("La cola 'pdfs' no existe. Esperando...")        
+    #try:
+    #    channel.basic_consume(queue='pdfs',
+    #                        auto_ack=True,
+    #                        on_message_callback=callback)
+    #    print(' [*] Esperando mensajes, oprime CTRL+C para salir')
+    #    channel.start_consuming()
+    #except pika.exceptions.ChannelClosedByBroker:
+    #    print("La cola 'pdfs' no existe. Esperando...")    
+
+def main():
+    #connection = pika.BlockingConnection(pika.ConnectionParameters(RABBITMQ_URL,5672))
+    #channel = connection.channel()
+    # Crea un suscriptor para el tópico en GCP
+    credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
+    subscriber = pubsub_v1.SubscriberClient(credentials=credentials)
+    subscription_path = subscriber.subscription_path(os.environ.get("PROJECT_ID","myfirstproject-417702"), os.environ.get("PROJECT_SUSCRIPTION","pdfs-sub"))      
+    # Inicia la escucha de mensajes
+    subscriber.subscribe(subscription_path, callback=callback2)
+    print('Esperando mensajes, presiona Ctrl+C para salir')
+    import time
+    while True:
+        time.sleep(60)
+    
+
 
 if __name__ == '__main__':
     try:
