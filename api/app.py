@@ -206,19 +206,38 @@ def get_google_credentials(credentials_file_path):
 
 # Función para subir un archivo a Google Cloud Storage
 def upload_file_to_gcs(bucket_name, file_name, file_content):
-    credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
-    client = storage.Client(credentials=credentials)
+    service_account_acces=os.environ.get("SERVICE_ACCOUNT","False")
+    if(service_account_acces=="False"):#Se valida si se debe acceder con una cuenta de servicio o con las cuentas del json
+        credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
+        client = storage.Client(credentials=credentials)
+    else:
+        client = storage.Client()
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(file_name)
     blob.upload_from_string(file_content)
 
+# Función para descargar un archivo de Google Cloud Storage
+def download_file_from_gcs(bucket_name, file_name):
+    service_account_acces=os.environ.get("SERVICE_ACCOUNT","False")
+    if(service_account_acces=="False"):#Se valida si se debe acceder con una cuenta de servicio o con las cuentas del json
+        credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
+        client = storage.Client(credentials=credentials)
+    else:
+        client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(file_name)
+    return blob.download_as_bytes()
+
 # Función para enviar un mensaje a Pub/Sub
 def put_quemessage_gcp(docid):
     try:
-        # Configurar el cliente de Pub/Sub
-        credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
-        publisher = pubsub_v1.PublisherClient(credentials=credentials)
-        #topic_path = publisher.topic_path(project_id, topic_name)
+        service_account_acces=os.environ.get("SERVICE_ACCOUNT","False")
+        if(service_account_acces=="False"):#Se valida si se debe acceder con una cuenta de servicio o con las cuentas del json
+            # Configurar el cliente de Pub/Sub
+            credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
+            publisher = pubsub_v1.PublisherClient(credentials=credentials)
+        else:
+            publisher = pubsub_v1.PublisherClient()
         topic_path = publisher.topic_path(os.environ.get("PROJECT_ID","myfirstproject-417702"), os.environ.get("PROJECT_TOPIC","pdfs"))
         # Crear el mensaje a enviar
         data = {
@@ -288,14 +307,6 @@ async def obtener_documentos(user_id:int, db: Session = Depends(get_db),username
         print("El usuario no tiene nigun documento")
         tareas_dict_list=[]
         return tareas_dict_list
-
-# Función para descargar un archivo de Google Cloud Storage
-def download_file_from_gcs(bucket_name, file_name):
-    credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
-    client = storage.Client(credentials=credentials)
-    bucket = client.bucket(bucket_name)
-    blob = bucket.blob(file_name)
-    return blob.download_as_bytes()
 
 #Operacion que permite obtener el documento original del usuario.
 @app.get("/originalDoc/{doc_id}",response_model=dict,tags=["original_documento"])

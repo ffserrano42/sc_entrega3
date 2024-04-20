@@ -51,8 +51,12 @@ def obtain_pdf(id_document):
             book = db.query(DocumentModel).filter(DocumentModel.id_document == id_document).first()
             if book:                           
                 try:
-                    credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
-                    client = storage.Client(credentials=credentials)
+                    service_account_acces=os.environ.get("SERVICE_ACCOUNT","False")
+                    if(service_account_acces=="False"):#Se valida si se debe acceder con una cuenta de servicio o con las cuentas del json
+                        credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
+                        client = storage.Client(credentials=credentials)
+                    else:
+                        client = storage.Client()
                     bucket_name = os.environ.get("BUCKET_NAME", "sc_entrega3_files")
                     bucket = client.bucket(bucket_name)
                     blob = bucket.blob(book.source_filename)
