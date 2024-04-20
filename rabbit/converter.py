@@ -41,8 +41,8 @@ def callback(message):
         data = json.loads(message.data.decode("utf-8"))
         name = data.get("id_book")
         print(f"{name} ha sido recibido")
-        obtain_pdf(name)
-        message.ack()
+        message.ack() # Se debe acusar primero, ya que si se levanta una nueva VM, este mensaje se vuelve a tomar y satura otra maquina
+        obtain_pdf(name)        
 
 def obtain_pdf(id_document):
         db=get_db()
