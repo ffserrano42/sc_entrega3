@@ -5,14 +5,15 @@ docker pull ffserrano42/converter:04202024--> Consumidor de la cola
 En este caso NO es necesario descargar la imagen de la base de datos, porque se utiliza el servicio de SQL de GCP
 En este caso NO es neceario instalar redes, ya que cada contenedor, estara en una MV diferente, y se conocen solo por la IP privada
 
-Comandos de docker utiles
-docker inspect network [Nombre red]-->obtiene los contenedores conectados a esa red, y asi obtener las ips
-docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' [ID del contenedor] -->obtiene la IP que Docker le asigno al contenedor
+Comandos de docker utiles:
+docker build -t [tagName] .  -->para construir la imagen de docker y colocarle el nombre de una vez (es recomendable que el nombre sea [accountdocker]/[imagename]:[version])
 docker images-->obtiene las imagenes descargadas
 docker ps -a -->obtiene los contenedores (corriendo o detenidos)
 docker rm [id del contenedor] --> elimina el contenedor
 docker rmi [id de la imagen] --> elimina la imagen
 docker tag 1234567890ab mi_app:v1.0--Sirve para poner el tag mi_app:v1.0 a la imagen con id 1234567890ab
+docker stop [containerid]-->Para un contenedor
+docker start [containerid]--> inicia un contenedor.
 
 Comandos linux
 1. sudo -->para ejecutar todo con permisos de admin
@@ -23,7 +24,7 @@ Comandos linux
 
 Nuevas variables para configurar en los contenedores:
 1. PROJECT_ID = El nombre del proyecto en GCP
-2. PROJECT_TOPIC = El nombre del topico en PUB/sub
+2. PROJECT_TOPIC = El nombre del topico en PUB/SUB
 3. BUCKET_NAME = El nombre del bucket
 4. PROJECT_SUSCRIPTION = el nombre del suscriptor asociado al Topico del PUB/SUB
 5. DELETE_FILES = Le indica al worker que despues de cargar el archivo, debe borrar los archivos temporales locales.
