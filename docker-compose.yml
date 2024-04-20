@@ -5,7 +5,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    image: ffserrano42/api:04172024
+    image: ffserrano42/api:04202024
     ports:
       - "5001:5001"
 
@@ -23,4 +23,4 @@ services:
     build:
       context: ./rabbit
       dockerfile: Dockerfile
-    image: ffserrano42/converter:04192024        
+    image: ffserrano42/converter:04202024        
