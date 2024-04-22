@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 if('url' not in st.session_state):
-    st.session_state.url=os.environ.get("API_URL","http://localhost:5001")
+    st.session_state.url=os.environ.get("API_URL","http://34.102.223.159:5001/")
 
 
 def obtener_datos_desde_api(username, password, email):
