@@ -15,7 +15,7 @@ from google.cloud import storage
 from google.oauth2 import service_account
 from google.cloud import pubsub_v1
 
-DATABASE_URL = os.environ.get('DATABASE', "postgresql://api:Uniandes2025!@34.176.10.10:5433/converter")# colocar la ip privada del servidor de postgress
+DATABASE_URL = os.environ.get('DATABASE', "postgresql://api:Uniandes2025!@104.197.133.154:5432/converter")# colocar la ip privada del servidor de postgress
 engine = create_engine(DATABASE_URL)
 Base = declarative_base()
 Base.metadata.create_all(bind=engine)
@@ -53,11 +53,11 @@ def obtain_pdf(id_document):
                 try:
                     service_account_acces=os.environ.get("SERVICE_ACCOUNT","False")
                     if(service_account_acces=="False"):#Se valida si se debe acceder con una cuenta de servicio o con las cuentas del json
-                        credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
+                        credentials = get_google_credentials("prime-bridge-418615-bb8381a0df5a.json")
                         client = storage.Client(credentials=credentials)
                     else:
                         client = storage.Client()
-                    bucket_name = os.environ.get("BUCKET_NAME", "sc_entrega3_files")
+                    bucket_name = os.environ.get("BUCKET_NAME", "sc-entrega3_2")
                     bucket = client.bucket(bucket_name)
                     blob = bucket.blob(book.source_filename)
                     base_folder="downloads"
@@ -108,10 +108,14 @@ def get_db():
             db.close()
 
 def main():
-    # Crea un suscriptor para el tópico en GCP
-    credentials = get_google_credentials("myfirstproject-417702-6a6d72abcd7b.json")
-    subscriber = pubsub_v1.SubscriberClient(credentials=credentials)
-    subscription_path = subscriber.subscription_path(os.environ.get("PROJECT_ID","myfirstproject-417702"), os.environ.get("PROJECT_SUSCRIPTION","pdfs-sub"))      
+    # Crea un suscriptor para el tópico en GCP    
+    service_account_acces=os.environ.get("SERVICE_ACCOUNT","False")
+    if(service_account_acces=="False"):#Se valida si se debe acceder con una cuenta de servicio o con las cuentas del json
+        credentials = get_google_credentials("prime-bridge-418615-bb8381a0df5a.json")
+        subscriber = pubsub_v1.SubscriberClient(credentials=credentials)
+    else:
+        subscriber = pubsub_v1.SubscriberClient()    
+    subscription_path = subscriber.subscription_path(os.environ.get("PROJECT_ID","prime-bridge-418615"), os.environ.get("PROJECT_SUSCRIPTION","pdf_entrega3-sub"))      
     # Inicia la escucha de mensajes
     subscriber.subscribe(subscription_path, callback=callback)
     print('Esperando mensajes, presiona Ctrl+C para salir')

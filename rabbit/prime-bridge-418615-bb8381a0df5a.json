@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "prime-bridge-418615",
+  "private_key_id": "bb8381a0df5af5901367cec44c12cff6504f2e96",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCp8v6VtNao/JGB\n0b+g0CHnJ2fggSLlWplCKofsbUnA6vsJh4c/acdGGyxdTOdU0B+NQglDBVClws6V\ngSbMrkAcClsi43M+/tQYKnTOGCdCKJTsBJmdXCKbcLAndGwupB4XgLKTzyP0FlD3\nbMHtUf5L/h9rnfiwNC+3Ur6iujCa0F982zexsHVCbNFdWc22qENztrtr7e5hBsD+\nQid7AuAwBiW28uTe0oempmt5VfPKpyvJWVB3xFXMIhfYcT0/nRGAF05qHTeV6dCY\nk9devpO3g4F1sEDEIlwx6R2NoC9dP83YGeVuldi9zU02m8vPFqOQtXV9EQ8Fp5Ue\nC87Ob9PJAgMBAAECggEAD/WF4zSPaOCI4HY8JsOMv3pzloFB7+Q9WpmIWJMdtyxJ\nxSgRMwsBn8t688r+OThvEhKGsKC95UcBI8h0RonBcvClBMZzotGGxLst61GY1C1f\n6Lb43u5RQKQJIrdb1lhqi/31pwwvXeM/mLCBmIHX3baAKFi2CwPnjDFMvha6bDso\nAFh5Spx6GUtb0T46QBQcmTvDSEdW3qk7ltpQjUPYhZXHyKpcnauIQsA64B8fIj+5\nw+iVG1UB7CwUhgh6vQlLuY+Hq98IySkWpjxsBMwldygwE6Omd1IGAFZH0ilYlr0H\naTD1fIAw8Xh3MrJDF3ssMTMU01ti/azJvU11EVvI5QKBgQDwE/upQ+Qj3SVKd13P\ny63REhx44jrEAA6AXS+MzbblLuJQkxtrQ8RCNG/VZNuLf10C02fM4LXnqAzivzuu\nIYIkiwfrecp4yi83TcfMLw43hdgzpu8aO3c5d3U2JaOmFXnXmsmbNXcOaEEjp9oF\nLDGQK6rmxjxrLy27h8VyYMDt3QKBgQC1OF8zyO/dTqGnNxje/OxBOEAQ48tjyHL2\n4lJtxPWiJ9LBKkiA/48Z1Hy2yBhkw4L7NWK1v+EcHTLJC3tjuyIpv0uhZrNT31Do\ndYZeOeI+wFdnJcbln17ih1wNPcdyneKYawjRhRnHvO5QgbpuszChRyRovQpj1nw0\nKUrOlDqs3QKBgQCS1mYSPSgIl3X7ec6zDYyeV0l61kPDJZW5BUXUBO5cdrSNO6yF\nisk7BP9xsWJmi9vDorHWKYqYybw342cJNg13dGG/sJoaDu+aD8SoKg+z/fUignOz\nw7NEPsA+Af950aDYMiAlAipzcWiF+l/q0gDugQbiZ1UE6bI7BOvK7UqTMQKBgEK9\naBJiRjRy6QX0PKyi6T97v9x4iEdPY0eZQlI631vA3tVVBS68767LmsKWHqW9e1eY\n6amV6Qm5lyKDoAWyvXoygWAHurOA4wM5hSrelnwVyhqqxv16HC/BOh2GSxXjH7iS\ncsT3B++PnRT5Mffi9l3vHXGVbWYnb8amDm7WGGXhAoGBAKtRt9B8WS8ORf8ffqj2\n8oCFGCcXS3XDpr7AKAZrMMlW/uoOFA2Fy3+JYs/BogcmSsS39x8F3R0kylc/zGFq\nHQBQSSWAo/FCO4Vatc5Qdc/g8Ud4AZ1X7lSdUFUy8zeIbk/etieJqwUKejrxzCMq\nzwQ7fE6cTFblK35qVvdOWNxX\n-----END PRIVATE KEY-----\n",
+  "client_email": "taller3@prime-bridge-418615.iam.gserviceaccount.com",
+  "client_id": "102095970798894416619",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/taller3%40prime-bridge-418615.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
